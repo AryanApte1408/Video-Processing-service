@@ -80,17 +80,17 @@ def watermark_video():
 
             # Create a text watermark
             txt_clip = TextClip("Aryan.AI", fontsize=60, color='white')
-            txt_clip = txt_clip.set_position(('right', 'bottom')).set_duration(10)  # Customize text and duration
+            txt_clip = txt_clip.set_position(('right', 'bottom'))
 
             # Load the video clip
             video_clip = VideoFileClip(video_path)
 
-            # Overlay the watermark on the video
-            watermarked_video = CompositeVideoClip([video_clip, txt_clip])
+            # Overlay the watermark on the video for the entire duration
+            watermarked_video = CompositeVideoClip([video_clip, txt_clip.set_duration(video_clip.duration)])
 
             # Save the watermarked video
             watermarked_video_path = os.path.join(UPLOADS_FOLDER, 'watermarked_' + video_file.filename)
-            watermarked_video.write_videofile(watermarked_video_path)
+            watermarked_video.write_videofile(watermarked_video_path, codec="libx264")  # Specify the codec
 
             # Store information in the database
             cursor = db.cursor()
@@ -101,12 +101,18 @@ def watermark_video():
             db.commit()
             cursor.close()
 
-            return send_file(watermarked_video_path, as_attachment=True)
+            return redirect(url_for('download', filename='watermarked_' + video_file.filename))
+
         else:
             return 'No video file provided', 400
 
     except Exception as e:
         return str(e), 500
+
+# Define a route for downloading watermarked videos
+@app.route('/download/<filename>', methods=['GET'])
+def download(filename):
+    return send_file(os.path.join(UPLOADS_FOLDER, filename), as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
