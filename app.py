@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_file, redirect, url_for
 import mysql.connector
-from moviepy.editor import VideoFileClip
+from moviepy.editor import VideoFileClip, TextClip
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 import os
 
 app = Flask(__name__)
@@ -13,7 +14,7 @@ db = mysql.connector.connect(
     database="vidyo"
 )
 
-# Define the paths for uploads and audio files
+# Define the paths for uploads, audio files, and watermarks
 UPLOADS_FOLDER = 'uploads/'
 AUDIO_FOLDER = 'audio/'
 
@@ -28,9 +29,9 @@ def hello_world():
     return 'Hello, World!'
 
 # Define a route for the test form
-@app.route('/audio_extract_test.html', methods=['GET'])
-def test_audio_extraction():
-    return render_template('audio_extract_test.html')
+@app.route('/functionality.html', methods=['GET'])
+def test_functionality():
+    return render_template('functionality.html')
 
 @app.route('/extract_audio', methods=['POST'])
 def extract_audio():
@@ -61,6 +62,46 @@ def extract_audio():
 
             # Return the extracted audio file for download
             return send_file(audio_path, as_attachment=True)
+        else:
+            return 'No video file provided', 400
+
+    except Exception as e:
+        return str(e), 500
+
+@app.route('/watermark_video', methods=['POST'])
+def watermark_video():
+    try:
+        video_file = request.files['video']
+
+        if video_file:
+            # Save the uploaded video file
+            video_path = os.path.join(UPLOADS_FOLDER, video_file.filename)
+            video_file.save(video_path)
+
+            # Create a text watermark
+            txt_clip = TextClip("Aryan.AI", fontsize=60, color='white')
+            txt_clip = txt_clip.set_position(('right', 'bottom')).set_duration(10)  # Customize text and duration
+
+            # Load the video clip
+            video_clip = VideoFileClip(video_path)
+
+            # Overlay the watermark on the video
+            watermarked_video = CompositeVideoClip([video_clip, txt_clip])
+
+            # Save the watermarked video
+            watermarked_video_path = os.path.join(UPLOADS_FOLDER, 'watermarked_' + video_file.filename)
+            watermarked_video.write_videofile(watermarked_video_path)
+
+            # Store information in the database
+            cursor = db.cursor()
+            cursor.execute(
+                "INSERT INTO watermarking (video_file_path, watermark_type) VALUES (%s, %s)",
+                (video_path, "text")
+            )
+            db.commit()
+            cursor.close()
+
+            return send_file(watermarked_video_path, as_attachment=True)
         else:
             return 'No video file provided', 400
 

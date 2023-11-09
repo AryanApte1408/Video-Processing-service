@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+   <h1>Audio Extraction and Video Watermarking</h1>
+   <form action="/extract_audio" method="post" enctype="multipart/form-data">
+      <label for="user">User: </label>
+      <input type="text" name="user" required><br><br>
+      <label for="video">Video File: </label>
+      <input type="file" name="video" accept=".mp4" required><br><br>
+      <input type="submit" value="Extract Audio">
+   </form>
+   <br>
+   <form action="/watermark_video" method="post" enctype="multipart/form-data">
+      <label for="video">Video File: </label>
+      <input type="file" name="video" accept=".mp4" required><br><br>
+      <input type="submit" value="Watermark Video">
+   </form>
+</body>
+</html>
