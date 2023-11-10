@@ -24,6 +24,18 @@ if not os.path.exists(UPLOADS_FOLDER):
 if not os.path.exists(AUDIO_FOLDER):
     os.makedirs(AUDIO_FOLDER)
 
+# Display table information function
+def display_table_info(table_name):
+    cursor = db.cursor()
+    cursor.execute(f"SELECT * FROM {table_name}")
+    rows = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    print(f"\nTable: {table_name}")
+    print(columns)
+    for row in rows:
+        print(row)
+    cursor.close()
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -31,6 +43,10 @@ def hello_world():
 # Define a route for the test form
 @app.route('/functionality.html', methods=['GET'])
 def test_functionality():
+    # Display information for 'videos' table
+    display_table_info('videos')
+    # Display information for 'watermarking' table
+    display_table_info('watermarking')
     return render_template('functionality.html')
 
 @app.route('/extract_audio', methods=['POST'])
