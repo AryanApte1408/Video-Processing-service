@@ -1,18 +1,15 @@
 from flask import Flask, request, render_template, send_file, redirect, url_for
-import mysql.connector
+from flask_sqlalchemy import SQLAlchemy
 from moviepy.editor import VideoFileClip, TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 import os
 
 app = Flask(__name__)
 
-# Configure MySQL connection
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="1234",
-    database="vidyo"
-)
+# Configure SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:1234@localhost/vidyo'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 # Define the paths for uploads, audio files, and watermarks
 UPLOADS_FOLDER = 'uploads/'
@@ -24,17 +21,25 @@ if not os.path.exists(UPLOADS_FOLDER):
 if not os.path.exists(AUDIO_FOLDER):
     os.makedirs(AUDIO_FOLDER)
 
+# Define SQLAlchemy models
+class Video(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.String(50))
+    audio_file_path = db.Column(db.String(255))
+
+class Watermarking(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    video_file_path = db.Column(db.String(255))
+    watermark_type = db.Column(db.String(50))
+
 # Display table information function
-def display_table_info(table_name):
-    cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM {table_name}")
-    rows = cursor.fetchall()
-    columns = [column[0] for column in cursor.description]
-    print(f"\nTable: {table_name}")
+def display_table_info(table):
+    rows = table.query.all()
+    columns = table.__table__.columns.keys()
+    print(f"\nTable: {table.__tablename__}")
     print(columns)
     for row in rows:
         print(row)
-    cursor.close()
 
 @app.route('/')
 def hello_world():
@@ -44,9 +49,9 @@ def hello_world():
 @app.route('/functionality.html', methods=['GET'])
 def test_functionality():
     # Display information for 'videos' table
-    display_table_info('videos')
+    display_table_info(Video)
     # Display information for 'watermarking' table
-    display_table_info('watermarking')
+    display_table_info(Watermarking)
     return render_template('functionality.html')
 
 @app.route('/extract_audio', methods=['POST'])
@@ -68,13 +73,9 @@ def extract_audio():
             audio_clip.write_audiofile(audio_path)
 
             # Store information in the database
-            cursor = db.cursor()
-            cursor.execute(
-                "INSERT INTO videos (user, audio_file_path) VALUES (%s, %s)",
-                (user, audio_path)
-            )
-            db.commit()
-            cursor.close()
+            new_video = Video(user=user, audio_file_path=audio_path)
+            db.session.add(new_video)
+            db.session.commit()
 
             # Return the extracted audio file for download
             return send_file(audio_path, as_attachment=True)
@@ -109,13 +110,9 @@ def watermark_video():
             watermarked_video.write_videofile(watermarked_video_path, codec="libx264")  # Specify the codec
 
             # Store information in the database
-            cursor = db.cursor()
-            cursor.execute(
-                "INSERT INTO watermarking (video_file_path, watermark_type) VALUES (%s, %s)",
-                (video_path, "text")
-            )
-            db.commit()
-            cursor.close()
+            new_watermarking = Watermarking(video_file_path=video_path, watermark_type="text")
+            db.session.add(new_watermarking)
+            db.session.commit()
 
             return redirect(url_for('download', filename='watermarked_' + video_file.filename))
 
@@ -131,4 +128,7 @@ def download(filename):
     return send_file(os.path.join(UPLOADS_FOLDER, filename), as_attachment=True)
 
 if __name__ == '__main__':
+    with app.app_context():
+        # Create the database tables before running the app
+        db.create_all()
     app.run(debug=True)
