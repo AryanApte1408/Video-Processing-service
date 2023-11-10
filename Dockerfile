@@ -4,6 +4,9 @@ FROM python:3.8
 # Set the working directory in the container
 WORKDIR /app
 
+# Install the MySQL client library
+RUN apt-get update && apt-get install -y default-libmysqlclient-dev
+
 # Copy the requirements file into the container at /app
 COPY requirements.txt .
 

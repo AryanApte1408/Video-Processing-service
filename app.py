@@ -7,7 +7,8 @@ import os
 app = Flask(__name__)
 
 # Configure SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:1234@localhost/vidyo'
+# Use 'host.docker.internal' as the host to connect to the MySQL server on the host machine
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:1234@host.docker.internal/vidyo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -16,10 +17,8 @@ UPLOADS_FOLDER = 'uploads/'
 AUDIO_FOLDER = 'audio/'
 
 # Ensure the folder structure exists
-if not os.path.exists(UPLOADS_FOLDER):
-    os.makedirs(UPLOADS_FOLDER)
-if not os.path.exists(AUDIO_FOLDER):
-    os.makedirs(AUDIO_FOLDER)
+os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
 # Define SQLAlchemy models
 class Video(db.Model):
@@ -32,14 +31,25 @@ class Watermarking(db.Model):
     video_file_path = db.Column(db.String(255))
     watermark_type = db.Column(db.String(50))
 
-# Display table information function
 def display_table_info(table):
-    rows = table.query.all()
-    columns = table.__table__.columns.keys()
-    print(f"\nTable: {table.__tablename__}")
-    print(columns)
-    for row in rows:
-        print(row)
+    try:
+        rows = table.query.all()
+        columns = table.__table__.columns.keys()
+        print(f"\nTable: {table.__tablename__}")
+        print(columns)
+        for row in rows:
+            print(row)
+    except Exception as e:
+        print(f"Error in display_table_info: {str(e)}")
+
+# Create the database tables before the first request is processed
+def create_tables():
+    with app.app_context():
+        db.create_all()
+
+# Check if the database tables need to be created before the first request
+if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    create_tables()
 
 @app.route('/')
 def hello_world():
@@ -128,7 +138,5 @@ def download(filename):
     return send_file(os.path.join(UPLOADS_FOLDER, filename), as_attachment=True)
 
 if __name__ == '__main__':
-    with app.app_context():
-        # Create the database tables before running the app
-        db.create_all()
-    app.run(debug=True)
+    # Run the app with host set to '0.0.0.0' to make it externally accessible
+    app.run(debug=True, host='0.0.0.0')
