@@ -1,0 +1,6 @@
+Flask
+mysql-connector-python==8.0.26
+moviepy==1.0.3
+SQLAlchemy==1.4.27
+
+Flask-SQLAlchemy==3.0.1
