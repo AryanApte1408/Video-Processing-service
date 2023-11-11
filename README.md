@@ -51,7 +51,7 @@ Before running the Python-Flask application, ensure the following prerequisites 
      ```
 
 4. **Running the Application:**
-   - After configuring and creating the tables, you can access the application at `http://localhost:5000/` in your web browser.
+   - After configuring and creating the tables, you can access the application at `http://localhost:5000/functionality.html` in your web browser.
 
 5. **Application Functionality:**
    - The Flask application provides the following functionalities:
