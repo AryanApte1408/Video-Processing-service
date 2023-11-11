@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # Configure SQLAlchemy
 # Use 'host.docker.internal' as the host to connect to the MySQL server on the host machine
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:1234@host.docker.internal/vidyo'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:1234@localhost/vidyo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -53,7 +53,7 @@ if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return 'Welcome to my assignment application'
 
 # Define a route for the test form
 @app.route('/functionality.html', methods=['GET'])

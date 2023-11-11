@@ -1,0 +1,31 @@
+# Features and Functionalities Used in the Video Processing Flask Application
+
+## Programming Language:
+- Python: The application is developed using the Python programming language.
+
+## Web Framework:
+- Flask: The web framework used for building the application.
+
+## Database:
+- MySQL: The application utilizes MySQL as the relational database.
+
+## Object-Relational Mapping (ORM):
+- SQLAlchemy: The SQLAlchemy ORM is employed for database operations, providing a Pythonic interface to the database.
+
+## Video Processing:
+- MoviePy: MoviePy is used for video processing tasks, such as extracting audio from video files and adding watermarks.
+
+## Web Development:
+- HTML Templates: Flask's template engine is utilized for rendering HTML templates, such as 'functionality.html.'
+
+## File Handling:
+- File Uploads: The application handles file uploads for video processing tasks.
+
+## Docker:
+- Docker: The application can be containerized and run using Docker. Docker Compose is used for managing the Docker containers.
+
+## Security:
+- Secure Filename Handling: The application uses Werkzeug to ensure secure handling of filenames during file uploads.
+
+## Miscellaneous:
+- Folder Structure: The application organizes uploaded files into specific folders, such as 'uploads' and 'audio.'
